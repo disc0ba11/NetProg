@@ -5,17 +5,6 @@
 #include <unistd.h>
 #include <iostream>
 
-// struct sockaddr_in {
-//  short sin_family;
-//  unsigned short sin_port;
-//  struct in_addr sin_addr;
-//  char sin_zero[8];
-// };
-
-// struct in_addr {
-//  unsigned long s_addr;
-// };
-
 const std::string currentDateTime() {
     time_t     now = time(0);
     struct tm  tstruct;
