@@ -16,7 +16,6 @@ const std::string currentDateTime() {
 
 int main()
 {
-    char *buf;
     sockaddr_in * addr = new (sockaddr_in);
     addr->sin_family = AF_INET; // интернет протокол IPv4
     addr->sin_port = htons(7777); // порт 7777
