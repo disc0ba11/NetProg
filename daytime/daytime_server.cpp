@@ -1,5 +1,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <strings.h>
 #include <stdio.h>
 #include <cstdlib>
 #include <unistd.h>
@@ -16,36 +17,30 @@ const std::string currentDateTime() {
 
 int main()
 {
-    sockaddr_in * addr = new (sockaddr_in);
-    addr->sin_family = AF_INET; // интернет протокол IPv4
-    addr->sin_port = htons(7777); // порт 7777
-    addr->sin_addr.s_addr = inet_addr("127.0.0.1"); // localhost
-    int s = socket(AF_INET, SOCK_STREAM, 0);
+    char buf[100];
+    std::string dateTime;
+    int n;
+    socklen_t len;
+    // sockaddr_in * saddr = new (sockaddr_in);
+    // sockaddr_in * caddr = new (sockaddr_in);
+    struct sockaddr_in saddr, caddr;
+    bzero(&saddr, sizeof(saddr));
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(7777);
+    saddr.sin_addr.s_addr = inet_addr(INADDR_ANY);
+    int s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s == -1) {
         perror("couldn't create socket");
 		exit(1);
     }
-    int rc = bind(s, (const sockaddr *) addr, sizeof(sockaddr_in));
-    if (rc == -1) {
-        perror("couldn't bind address");
-        exit(1);
-    }
-    rc = listen(s, 100);
-    if (rc == -1) {
-        perror("couldn't set up listener");
-        close(s);
-        exit(1);
-    }
-    sockaddr_in * client_addr = new sockaddr_in;
-    socklen_t len = sizeof(sockaddr_in);
-    while(1) {
-        int work_sock = accept(s, (sockaddr *)(client_addr), &len);
-        if (work_sock == -1) {
-            perror("couldn't accept connection");
-            close(work_sock);
-        }
-        std::string dateTime = currentDateTime();
-        rc = send(work_sock, dateTime.c_str(), dateTime.length(), 0);
-        close(work_sock);
+    bind(s, (struct sockaddr *) &saddr, sizeof(saddr));
+    len = sizeof(caddr);
+    while (1) {
+        n = recvfrom(s, buf, sizeof(buf), MSG_WAITALL, (struct sockaddr *) &caddr, &len);
+        buf[n] = '\0';
+        printf("Client: %s", buf);
+        dateTime = currentDateTime();
+        sendto(s, dateTime.c_str(), 1024, MSG_CONFIRM, (struct sockaddr *) &caddr, sizeof(caddr));
+        printf("Sent date/time\n");
     }
 }
