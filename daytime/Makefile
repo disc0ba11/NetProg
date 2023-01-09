@@ -1,22 +1,29 @@
-.PHONY: all debug release clean
+.PHONY: all debug release client server clean
 
-RELEASE_FLAGS	= -O2 -Wall -DNDEBUG
-DEBUG_FLAGS	= -g -O0 -Wall
-RELEASE_EXEC	= daytime_server
-DEBUG_EXEC	= daytime_server-dbg
-SOURCE		= daytime_server.cpp
+RELEASE_FLAGS = -O2 -Wall -DNDEBUG
+DEBUG_FLAGS = -g -O0 -Wall
+CLIENT_RELEASE_EXEC = daytime_client
+SERVER_RELEASE_EXEC = daytime_server
+CLIENT_DEBUG_EXEC = daytime_client-dbg
+SERVER_DEBUG_EXEC = daytime_server-dbg
+CLIENT_SRC = daytime_client.cpp
+SERVER_SRC = daytime_server.cpp
 
-all: release
+all: debug release
 
-debug: $(DEBUG_EXEC)
+debug: $(CLIENT_DEBUG_EXEC) $(SERVER_DEBUG_EXEC)
+$(CLIENT_DEBUG_EXEC): $(CLIENT_SRC)
+	g++ $(DEBUG_FLAGS) $(CLIENT_SRC) -o $(CLIENT_DEBUG_EXEC)
+$(SERVER_DEBUG_EXEC): $(SERVER_SRC)
+	g++ $(DEBUG_FLAGS) $(SERVER_SRC) -o $(SERVER_DEBUG_EXEC)
 
-$(DEBUG_EXEC): $(SOURCE)
-	g++ $(DEBUG_FLAGS) $(SOURCE) -o $(DEBUG_EXEC)
+release: client server
 
-release: $(RELEASE_EXEC)
+client:
+	g++ $(RELEASE_FLAGS) $(CLIENT_SRC) -o $(CLIENT_RELEASE_EXEC)
 
-$(RELEASE_EXEC): $(SOURCE)
-	g++ $(RELEASE_FLAGS) $(SOURCE) -o $(RELEASE_EXEC)
+server:
+	g++ $(RELEASE_FLAGS) $(SERVER_SRC) -o $(SERVER_RELEASE_EXEC)
 
 clean:
-	rm -f $(RELEASE_EXEC) $(DEBUG_EXEC)
+	rm -f $(CLIENT_RELEASE_EXEC) $(SERVER_RELEASE_EXEC) $(CLIENT_DEBUG_EXEC) $(SERVER_DEBUG_EXEC)

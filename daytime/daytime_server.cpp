@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <iostream>
+#define PORT 5000
+#define MAXLINE 1000
 
 const std::string currentDateTime() {
     time_t     now = time(0);
@@ -16,31 +18,26 @@ const std::string currentDateTime() {
 }
 
 int main()
-{
-    char buf[100];
-    std::string dateTime;
-    int n;
+{   
+    char buffer[100];
+    std::string message;
+    int s;
     socklen_t len;
-    // sockaddr_in * saddr = new (sockaddr_in);
-    // sockaddr_in * caddr = new (sockaddr_in);
     struct sockaddr_in saddr, caddr;
     bzero(&saddr, sizeof(saddr));
-    saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(7777);
-    saddr.sin_addr.s_addr = inet_addr(INADDR_ANY);
-    int s = socket(AF_INET, SOCK_DGRAM, 0);
-    if (s == -1) {
-        perror("couldn't create socket");
-		exit(1);
-    }
-    bind(s, (struct sockaddr *) &saddr, sizeof(saddr));
-    len = sizeof(caddr);
+    s = socket(AF_INET, SOCK_DGRAM, 0);        
+    saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    saddr.sin_port = htons(PORT);
+    saddr.sin_family = AF_INET; 
+    bind(s, (struct sockaddr*)&saddr, sizeof(saddr));
     while (1) {
-        n = recvfrom(s, buf, sizeof(buf), MSG_WAITALL, (struct sockaddr *) &caddr, &len);
-        buf[n] = '\0';
-        printf("Client: %s", buf);
-        dateTime = currentDateTime();
-        sendto(s, dateTime.c_str(), 1024, MSG_CONFIRM, (struct sockaddr *) &caddr, sizeof(caddr));
-        printf("Sent date/time\n");
+        len = sizeof(caddr);
+        int n = recvfrom(s, buffer, sizeof(buffer),
+                0, (struct sockaddr*) &caddr, &len);
+        buffer[n] = '\0';
+        puts(buffer);
+        message = currentDateTime();
+        sendto(s, message.c_str(), MAXLINE, 0,
+            (struct sockaddr*) &caddr, sizeof(caddr));
     }
 }
