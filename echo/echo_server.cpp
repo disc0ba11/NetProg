@@ -5,22 +5,13 @@
 #include <unistd.h>
 #include <iostream>
 
-const std::string currentDateTime() {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-    return buf;
-}
-
 int main()
 {
     sockaddr_in * addr = new (sockaddr_in);
-    addr->sin_family = AF_INET; // интернет протокол IPv4
-    addr->sin_port = htons(7777); // порт 7777
-    addr->sin_addr.s_addr = inet_addr("127.0.0.1"); // localhost
-    int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    addr->sin_family = AF_INET;
+    addr->sin_port = htons(7777);
+    addr->sin_addr.s_addr = inet_addr("127.0.0.1");
+    int s = socket(AF_INET, SOCK_STREAM, 0);
     if (s == -1) {
         perror("couldn't create socket");
 		exit(1);
@@ -44,8 +35,16 @@ int main()
             perror("couldn't accept connection");
             close(work_sock);
         }
-        std::string dateTime = currentDateTime();
-        rc = send(work_sock, dateTime.c_str(), dateTime.length(), 0);
+        size_t len = 1024;
+        char * data = new char[len];
+        while (recv(work_sock, (void*)data, len, MSG_PEEK) == len) {
+            delete[] data;
+            len *= 2;
+            data = new char[len];
+        }
+        recv(work_sock, (void*)data, len, 0);
+        rc = send(work_sock, data, len, 0);
         close(work_sock);
+        delete[] data;
     }
 }
